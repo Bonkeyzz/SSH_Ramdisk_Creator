@@ -22,8 +22,8 @@ Based from <a href="https://github.com/verygenericname/SSHRD_Script">verygeneric
 
 # Cloning
 
-Clone and cd into this repository: `git clone https://github.com/Bonkeyzz/SSHRD_Script_bonk --recursive && cd SSHRD_Script`.
-If you have cloned this before, run `cd SSHRD_Script && git pull` to pull new changes
+Clone and cd into this repository: `git clone https://github.com/Bonkeyzz/SSHRD_Ramdisk_Creator --recursive && cd SSHRD_Script`.
+If you have cloned this before, run `cd SSHRD_Ramdisk_Creator && git pull` to pull new changes
 
 # Usage
 ```shell
