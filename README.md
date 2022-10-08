@@ -19,11 +19,18 @@ Based from <a href="https://github.com/verygenericname/SSHRD_Script">verygeneric
 # Prerequsites
 
 1. A computer running macOS/linux
+2. Python 3.x
+
+### Python Modules
+1. autodecrypt
+2. argsparse
+3. requests
 
 # Cloning
 
-Clone and cd into this repository: `git clone https://github.com/Bonkeyzz/SSHRD_Ramdisk_Creator --recursive && cd SSHRD_Script`.
+1. Clone and cd into this repository: `git clone https://github.com/Bonkeyzz/SSHRD_Ramdisk_Creator --recursive && cd SSHRD_Script`.
 If you have cloned this before, run `cd SSHRD_Ramdisk_Creator && git pull` to pull new changes
+2. After being in the repo directory, do `pip install -r requirements.txt`
 
 # Usage
 ```shell
