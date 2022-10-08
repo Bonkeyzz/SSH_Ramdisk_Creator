@@ -28,7 +28,7 @@ Based from <a href="https://github.com/verygenericname/SSHRD_Script">verygeneric
 
 # Cloning
 
-1. Clone and cd into this repository: `git clone https://github.com/Bonkeyzz/SSHRD_Ramdisk_Creator --recursive && cd SSHRD_Script`.
+1. Clone and cd into this repository: `git clone https://github.com/Bonkeyzz/SSHRD_Ramdisk_Creator --recursive && cd SSHRD_Ramdisk_Creator`.
 If you have cloned this before, run `cd SSHRD_Ramdisk_Creator && git pull` to pull new changes
 2. After being in the repo directory, do `pip install -r requirements.txt`
 
@@ -53,6 +53,7 @@ options:
 # With iOS version 15.7
 ./sshrd.py -c 0x8000 -m n66ap -pt iPhone8,2 -i 15.7
 ```
+Ramdisks will be located in `final_ramdisk` once the program finishes.
 
 # Donate
 Want to support my work? Buy me a coffee. :^)
