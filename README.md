@@ -47,7 +47,7 @@ options:
 ```
 
 # Donate
-Want to support my work. Buy me a coffee. :^)
+Want to support my work? Buy me a coffee. :^)
 <a href="https://paypal.me/bonkeyzz"></br>
 <img src="https://raw.githubusercontent.com/andreostrovsky/donate-with-paypal/master/blue.svg" height="40"></a>
 
