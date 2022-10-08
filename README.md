@@ -45,6 +45,12 @@ options:
 # With iOS version 15.7
 ./sshrd.py -c 0x8000 -m n66ap -pt iPhone8,2 -i 15.7
 ```
+
+# Donate
+Want to support my work. Buy me a coffee. :^)
+<a href="https://paypal.me/bonkeyzz"></br>
+<img src="https://raw.githubusercontent.com/andreostrovsky/donate-with-paypal/master/blue.svg" height="40"></a>
+
 # Credits
 - [verygenericname](https://github.com/verygenericname) for the shell script (original version)
 - [tihmstar](https://github.com/tihmstar) for pzb/original iBoot64Patcher/img4tool
