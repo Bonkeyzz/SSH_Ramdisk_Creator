@@ -1,16 +1,16 @@
-<h1 align="center">SSH Ramdisk Script</h1>
+<h1 align="center">SSH Ramdisk Creator</h1>
 
 <p align="center">
-  <a href="https://github.com/verygenericname/SSHRD_Script/graphs/contributors" target="_blank">
+  <a href="https://github.com/Bonkeyzz/SSHRD_Script_bonk/graphs/contributors" target="_blank">
     <img src="https://img.shields.io/github/contributors/verygenericname/SSHRD_Script.svg" alt="Contributors">
   </a>
-  <a href="https://github.com/verygenericname/SSHRD_Script/commits/main" target="_blank">
+  <a href="https://github.com/Bonkeyzz/SSHRD_Script_bonk/commits/main" target="_blank">
     <img src="https://img.shields.io/github/commit-activity/w/verygenericname/SSHRD_Script.svg" alt="Commits">
   </a>
 </p>
 
 <p align="center">
-Create and boot a SSH ramdisk on checkm8 devices
+Create iPhone/iPad OS SSH Ramdisks easily.
 </p>
 
 ---
@@ -18,40 +18,36 @@ Create and boot a SSH ramdisk on checkm8 devices
 # Prerequsites
 
 1. A computer running macOS/linux
-2. A checkm8 device (A7-A11)
+
+# Cloning
+
+Clone and cd into this repository: `git clone https://github.com/Bonkeyzz/SSHRD_Script_bonk --recursive && cd SSHRD_Script`.
+If you have cloned this before, run `cd SSHRD_Script && git pull` to pull new changes
 
 # Usage
+```shell
+usage: sshrd.py [-h] [--cpid CPID] [--model MODEL] [--product_type PRODUCT_TYPE] [--ios IOS]
 
-1. Clone and cd into this repository: `git clone https://github.com/verygenericname/SSHRD_Script --recursive && cd SSHRD_Script`
-    - If you have cloned this before, run `cd SSHRD_Script && git pull` to pull new changes
-2. Run `./sshrd.sh <iOS version for ramdisk>`, **without** the `<>`.
-3. Place your device into DFU mode
-    - A11 users, go to recovery first, then DFU.
-4. Run `./sshrd.sh boot` to boot the ramdisk
-5. Run `./sshrd.sh ssh` to connect to SSH on your device
-6. Finally, to mount the filesystems, run `mount_filesystems`  
-    - /var is mounted to /mnt2 in the ssh session.
-    - /private/preboot is mounted to /mnt6.
-7. Have fun!
+SSHRD Ramdisk creation tool.
 
-# Linux notes
-- you may have to run sudo systemctl stop usbmuxd
-- then run sudo usbmuxd -p -f
-- then ssh will work
-
-# Other commands
-
-- Reset your device: `./sshrd.sh reset`
-- Dump onboard blobs: `./sshrd.sh dump-blobs`
-- Delete old SSH ramdisk: `./sshrd.sh clean`
-
-# Other Stuff
-
-- [Reddit Post](https://www.reddit.com/r/jailbreak/comments/wgiye1/free_release_ssh_ramdisk_creator_for_iphones_ipad/)
-
+options:                                               
+  -h, --help            show this help message and exit
+  --cpid CPID, -c CPID  CPID of device (example 0x8000)
+  --model MODEL, -m MODEL                              
+                        Model of device (example n71ap)
+  --product_type PRODUCT_TYPE, -pt PRODUCT_TYPE
+                        Product type of device (example iPhone8,1)
+  --ios IOS, -i IOS     iOS version for the ramdisk (example 15.7)
+```
+**Example:**
+```shell
+# This will create a ramdisk for iPhone8,2 (iPhone 6s+), Board 1 (BoardConfig: n66ap, CPID: 0x8000)
+# With iOS version 15.7
+./sshrd.py -c 0x8000 -m n66ap -pt iPhone8,2 -i 15.7
+```
 # Credits
+- [verygenericname](https://github.com/verygenericname) for the shell script (original version)
 - [tihmstar](https://github.com/tihmstar) for pzb/original iBoot64Patcher/img4tool
 - [xerub](https://github.com/xerub) for img4lib and restored_external in the ramdisk
 - [Cryptic](https://github.com/Cryptiiiic) for iBoot64Patcher fork
-- [opa334](https://github.com/opa334) for TrollStore
 - [Nebula](https://github.com/itsnebulalol) for a bunch of QOL fixes to this script
