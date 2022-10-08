@@ -10,7 +10,8 @@
 </p>
 
 <p align="center">
-Create iPhone/iPad OS SSH Ramdisks easily.
+Create iPhone/iPad OS SSH Ramdisks easily.</br>
+Based from <a href="https://github.com/verygenericname/SSHRD_Script">verygenericname's SSHRD_Script</a>.
 </p>
 
 ---
