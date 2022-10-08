@@ -1,7 +1,7 @@
 .DS_Store
 Darwin/gaster
 Linux/gaster
-work
-sshramdisk
+final_ramdisk
+temp_ramdisk
 .irecovery
 *.log
