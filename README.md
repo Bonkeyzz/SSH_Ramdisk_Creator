@@ -16,7 +16,7 @@ Based from <a href="https://github.com/verygenericname/SSHRD_Script">verygeneric
 
 ---
 
-# Prerequsites
+# Prerequisites
 
 1. A computer running macOS/linux
 2. Python 3.x
