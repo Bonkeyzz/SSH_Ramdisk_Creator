@@ -34,24 +34,28 @@ If you have cloned this before, run `cd SSHRD_Ramdisk_Creator && git pull` to pu
 
 # Usage
 ```shell
-usage: sshrd.py [-h] [--cpid CPID] [--model MODEL] [--product_type PRODUCT_TYPE] [--ios IOS]
+usage: sshrd.py [-h] --decrypt-mode DECRYPT_MODE --cpid CPID --model MODEL --product_type PRODUCT_TYPE --ios IOS [--boot-args BOOT_ARGS]
 
 SSHRD Ramdisk creation tool.
 
-options:                                               
+options:
   -h, --help            show this help message and exit
+  --decrypt-mode DECRYPT_MODE, -d DECRYPT_MODE
+                        '0' is decryption using keys fetched online, '1' is decryption with Gaster
   --cpid CPID, -c CPID  CPID of device (example 0x8000)
-  --model MODEL, -m MODEL                              
+  --model MODEL, -m MODEL
                         Model of device (example n71ap)
   --product_type PRODUCT_TYPE, -pt PRODUCT_TYPE
                         Product type of device (example iPhone8,1)
   --ios IOS, -i IOS     iOS version for the ramdisk (example 15.7)
+  --boot-args BOOT_ARGS, -ba BOOT_ARGS
+                        iOS arguments to execute during boot. Default: "rd=md0 debug=0x2014e -v wdt=-1"
 ```
 **Example:**
 ```shell
 # This will create a ramdisk for iPhone8,2 (iPhone 6s+), Board 1 (BoardConfig: n66ap, CPID: 0x8000)
-# With iOS version 15.7
-./sshrd.py -c 0x8000 -m n66ap -pt iPhone8,2 -i 15.7
+# With iOS version 15.7. Keys will be fetched online.
+./sshrd.py -d 0 -c 0x8000 -m n66ap -pt iPhone8,2 -i 15.7
 ```
 Ramdisks will be located in `final_ramdisk` once the program finishes.
 
