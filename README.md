@@ -1,13 +1,5 @@
 <h1 align="center">SSH Ramdisk Creator</h1>
 
-<p align="center">
-  <a href="https://github.com/Bonkeyzz/SSHRD_Script_bonk/graphs/contributors" target="_blank">
-    <img src="https://img.shields.io/github/contributors/verygenericname/SSHRD_Script.svg" alt="Contributors">
-  </a>
-  <a href="https://github.com/Bonkeyzz/SSHRD_Script_bonk/commits/main" target="_blank">
-    <img src="https://img.shields.io/github/commit-activity/w/verygenericname/SSHRD_Script.svg" alt="Commits">
-  </a>
-</p>
 
 <p align="center">
 Create iPhone/iPad OS SSH Ramdisks easily.</br>
@@ -57,10 +49,11 @@ options:
 # With iOS version 15.7. Keys will be fetched online.
 ./sshrd.py -d 0 -c 0x8000 -m n66ap -pt iPhone8,2 -i 15.7
 ```
-Ramdisks will be located in `final_ramdisk` once the program finishes.
+Ramdisks will be located in `final_ramdisk` once the program finishes. </br>
+**NOTE: iOS 16.x is not supported yet. I will not be able to help with any errors occuring when trying to create a ramdisk for this version.**
 
 # Donate
-Want to support my work? Buy me a coffee. :^)
+Feel free to donate if you wanna support my work!
 <a href="https://paypal.me/bonkeyzz"></br>
 <img src="https://raw.githubusercontent.com/andreostrovsky/donate-with-paypal/master/blue.svg" height="40"></a>
 

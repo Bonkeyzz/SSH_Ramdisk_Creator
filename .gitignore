@@ -4,4 +4,6 @@ Linux/gaster
 final_ramdisk
 temp_ramdisk
 .irecovery
+.idea
+venv
 *.log
