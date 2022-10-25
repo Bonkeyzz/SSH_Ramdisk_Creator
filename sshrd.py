@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
 import os, sys, subprocess
 import argparse
@@ -9,15 +9,66 @@ from os import path
 import plistlib
 import pathlib
 import zipfile
-from autodecrypt import scrapkeys, utils, decrypt_img
+from autodecrypt import scrapkeys, utils
 import glob
 import shutil
+import pyimg4
+from pyimg4 import Keybag, Compression
 
 
 def run_cmd(cmd):
     subp = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     return subp.stdout.read().decode('utf-8')
 
+# region decrypt_img4 functions
+
+
+def get_image_type(filename: str):
+    """Check if it is IM4P format."""
+    if not os.path.isfile(filename):
+        print("[e] %s : file not found" % filename)
+        sys.exit(-1)
+    with open(filename, "rb") as file:
+        file.seek(7, 0)
+        magic = file.read(4).decode()
+        if "M4P" in magic:
+            if magic != "IM4P":
+                file.seek(-1, os.SEEK_CUR)
+            magic = "img4"
+        else:
+            return None
+        file.seek(2, os.SEEK_CUR)
+        img_type = file.read(4)
+        return magic, img_type
+
+
+def decrypt_img(infile: str, magic: str, iv: str, key: str) -> int:
+    """Decrypt IM4P file. This code is mostly copy/pasta from PyIMG4."""
+    file = open(infile, 'rb').read()
+    im4p = pyimg4.IM4P(file)
+
+    if im4p.payload.encrypted is False:
+        print("[i] payload is not encrypted")
+        return 0
+
+    if iv is None or key is None:
+        print("[e] iv or key is None")
+        return -1
+
+    outfile = infile.replace("im4p", "bin")
+    print(f"[i] decrypting {infile} to {outfile}...")
+
+    im4p.payload.decrypt(Keybag(key=key, iv=iv))
+    # VERY BAD IF STATEMENT HERE WATCH OUT
+    # Had to actually do this due to the error "AttributeError: UNKNOWN"
+    if Compression(im4p.payload.compression) is not Compression.NONE:
+        if Compression(im4p.payload.compression) is not Compression.UNKNOWN:
+            print('[i] image4 payload data is compressed, decompressing...')
+            im4p.payload.decompress()
+
+    open(outfile, 'wb').write(im4p.payload.output().data)
+    return 0
+# endregion
 
 def run_pcmd(cmd):
     print(run_cmd(cmd))
@@ -94,7 +145,7 @@ def get_build_id(product_type, ios_version):
 
 
 def download_required_files():
-    ipsw_url = get_ipsw_url(args['product_type'], args['ios'])
+    ipsw_url = get_ipsw_url(args.product_type, args.ios)
     print(f'URL: {ipsw_url}')
     run_pcmd(f"../{sys_platform}/pzb -g BuildManifest.plist {ipsw_url}")
     with open('BuildManifest.plist', 'rb') as build_manifest:
@@ -127,10 +178,10 @@ def download_required_files():
 
 
 def decrypt_boot_stages(ibss_path, ibec_path):
-    ibec_decrypted_path = ibec_path.replace(".im4p", ".bin")
-    ibss_decrypted_path = ibss_path.replace(".im4p", ".bin")
-    print(f"Decryption mode: {args['decrypt-mode'] == 1: 'Gaster' : 'Autodecrypt'}")
-    if args['decrypt-mode'] == 1:
+    print(f"Decryption mode: { 'Gaster' if args.decrypt_mode == 1 else 'Online key fetch'}")
+    if args.decrypt_mode == 1:
+        ibec_decrypted_path = ibec_path.replace(".im4p", ".bin")
+        ibss_decrypted_path = ibss_path.replace(".im4p", ".bin")
         run_pcmd(f'../{sys_platform}/gaster pwn')
         run_pcmd(f'../{sys_platform}/gaster reset')
         run_pcmd(f'../{sys_platform}/gaster decrypt {ibss_path} {ibss_decrypted_path}')
@@ -146,17 +197,19 @@ def decrypt_boot_stages(ibss_path, ibec_path):
         iv_ibss, key_ibss = utils.split_key(ivkey_ibss)
         print(f'[*] IV: {iv_ibss}')
         print(f'[*] Key: {key_ibss}')
-        magic_ibss = decrypt_img.get_image_type(ibss_path)
-        decrypt_img.decrypt_img(ibss_path, magic_ibss, iv_ibss, key_ibss)
+        magic_ibss = get_image_type(ibss_path)
+        print(ibss_path, magic_ibss, iv_ibss, key_ibss)
+        decrypt_img(ibss_path, magic_ibss, iv_ibss, key_ibss)
 
         print(f'[*] iBEC Path: {ibec_path}')
         ivkey_ibec = scrapkeys.getkeys(args.product_type, build_id, ibec_path)
         iv_ibec, key_ibec = utils.split_key(ivkey_ibec)
         print(f'[*] IV: {iv_ibec}')
         print(f'[*] Key: {key_ibec}')
-        magic_ibec = decrypt_img.get_image_type(ibec_path)
-        decrypt_img.decrypt_img(ibec_path, magic_ibec, iv_ibec, key_ibec)
-
+        magic_ibec = get_image_type(ibec_path)
+        decrypt_img(ibec_path, magic_ibec, iv_ibec, key_ibec)
+        ibec_decrypted_path = ibec_path.replace(".im4p", ".bin")
+        ibss_decrypted_path = ibss_path.replace(".im4p", ".bin")
     return ibss_decrypted_path, ibec_decrypted_path
 
 
@@ -165,8 +218,8 @@ def patch_files(ibss_decrypted_path, ibec_decrypted_path, kernelcache_path, devi
     run_pcmd(f'../{sys_platform}/iBoot64Patcher {ibss_decrypted_path} iBSS.patched')
     run_pcmd(
         f'../{sys_platform}/img4 -i iBSS.patched -o ../final_ramdisk/{args.ios}/{args.product_type}/{args.model}/ibss.img4 -M IM4M -A -T ibss')
-    if args['boot-args']:
-        boot_args = args['boot-args']
+    if args.boot_args:
+        boot_args = args.boot_args
     else:
         boot_args = '"rd=md0 debug=0x2014e -v wdt=-1"'
     if args.cpid == "0x8960" or args.cpid == "0x7000" or args.cpid == "0x7001":
@@ -190,7 +243,7 @@ def patch_files(ibss_decrypted_path, ibec_decrypted_path, kernelcache_path, devi
     run_pcmd(f'../{sys_platform}/img4 -i {ramdisk_path} -o ramdisk.dmg')
     patch_ramdisk('ramdisk.dmg')
     run_pcmd(
-        f'../{sys_platform}/img4 -i ..other/logo.im4p -o ../final_ramdisk/{args.ios}/{args.product_type}/{args.model}/logo.img4 -A -T rlgo -M IM4M')
+        f'../{sys_platform}/img4 -i ../other/logo.im4p -o ../final_ramdisk/{args.ios}/{args.product_type}/{args.model}/logo.img4 -A -T rlgo -M IM4M')
 
 
 def patch_ramdisk(ramdisk_path):
@@ -202,7 +255,7 @@ def patch_ramdisk(ramdisk_path):
             run_pcmd(f'../{sys_platform}/gtar -x --no-overwrite-dir -f ../sshtars/atvssh.tar.gz -C /tmp/SSHRD/')
         elif args.cpid == '0x8012':
             run_pcmd(f'../{sys_platform}/gtar -x --no-overwrite-dir -f ../sshtars/t2ssh.tar.gz -C /tmp/SSHRD/')
-            print("[!] !!! T2 Ssh might hang and do nothing when booting !!!")
+            print("[!] !!! T2 SSH might hang and do nothing when booting !!!")
         else:
             run_pcmd(f'../{sys_platform}/gtar -x --no-overwrite-dir -f ../sshtars/ssh.tar.gz -C /tmp/SSHRD/')
 
@@ -231,7 +284,7 @@ if __name__ == '__main__':
         exit(1)
     os.system('clear')
     parser = argparse.ArgumentParser(description='SSHRD Ramdisk creation tool.')
-    parser.add_argument('--decrypt-mode', '-d', type=int,
+    parser.add_argument('--decrypt_mode', '-d', type=int,
                         help="'0' is decryption using keys fetched online, '1' is decryption with Gaster",
                         required=True)
     parser.add_argument('--cpid', '-c', type=str, help='CPID of device (example 0x8000)', required=True)
@@ -239,11 +292,11 @@ if __name__ == '__main__':
     parser.add_argument('--product_type', '-pt', type=str, help='Product type of device (example iPhone8,1)',
                         required=True)
     parser.add_argument('--ios', '-i', type=str, help='iOS version for the ramdisk (example 15.7)', required=True)
-    parser.add_argument('--boot-args', '-ba', type=str,
+    parser.add_argument('--boot_args', '-ba', type=str,
                         help='iOS arguments to execute during boot. Default: "rd=md0 debug=0x2014e -v wdt=-1"')
     args = parser.parse_args()
 
-    if not os.path.isfile(f'{sys_platform}/gaster') and args['decrypt-mode'] == 1:
+    if not os.path.isfile(f'{sys_platform}/gaster') and args.decrypt_mode == 1:
         print("[!] gaster does not appear to exist! Downloading a new one...\n")
         get_gaster(sys_platform)
 
@@ -258,7 +311,7 @@ if __name__ == '__main__':
     pathlib.Path(f'final_ramdisk/{args.ios}/{args.product_type}/{args.model}').mkdir(exist_ok=True, parents=True)
 
     os.chdir('temp_ramdisk')
-    run_pcmd(f"../{sys_platform}/img4tool -e -s ..other/shsh/{args.cpid}.shsh -m IM4M")
+    run_pcmd(f"../{sys_platform}/img4tool -e -s ../other/shsh/{args.cpid}.shsh -m IM4M")
 
     ibss_path, ibec_path, kernelcache_path, restoreramdisk_path, trustcache_path, devicetree_path = download_required_files()
     ibss_decrypted_path, ibec_decrypted_path = decrypt_boot_stages(ibss_path, ibec_path)
