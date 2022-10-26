@@ -20,8 +20,8 @@ Based from <a href="https://github.com/verygenericname/SSHRD_Script">verygeneric
 
 # Cloning
 
-1. Clone and cd into this repository: `git clone https://github.com/Bonkeyzz/SSHRD_Ramdisk_Creator --recursive && cd SSHRD_Ramdisk_Creator`.
-If you have cloned this before, run `cd SSHRD_Ramdisk_Creator && git pull` to pull new changes
+1. Clone and cd into this repository: `git clone https://github.com/Bonkeyzz/SSH_Ramdisk_Creator --recursive && cd SSH_Ramdisk_Creator`.
+If you have cloned this before, run `cd SSH_Ramdisk_Creator && git pull` to pull new changes
 2. After being in the repo directory, do `pip install -r requirements.txt`
 
 # Usage
