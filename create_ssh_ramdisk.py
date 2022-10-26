@@ -280,7 +280,7 @@ def patch_ramdisk():
 
 
 if __name__ == '__main__':
-    main_root_dir = os.path.dirname(__file__)
+    main_root_dir = os.path.realpath(os.path.dirname(__file__))
     sys_platform = platform.uname().system
     print(f"[*] System platform: {sys_platform}")
     if sys_platform == 'Windows':
