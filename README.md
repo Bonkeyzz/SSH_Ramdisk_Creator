@@ -26,7 +26,7 @@ If you have cloned this before, run `cd SSH_Ramdisk_Creator && git pull` to pull
 
 # Usage
 ```shell
-usage: sshrd.py [-h] --decrypt-mode DECRYPT_MODE --cpid CPID --model MODEL --product_type PRODUCT_TYPE --ios IOS [--boot-args BOOT_ARGS]
+usage: create_ssh_ramdisk.py [-h] --decrypt-mode DECRYPT_MODE --cpid CPID --model MODEL --product_type PRODUCT_TYPE --ios IOS [--boot-args BOOT_ARGS]
 
 SSHRD Ramdisk creation tool.
 
@@ -47,7 +47,7 @@ options:
 ```shell
 # This will create a ramdisk for iPhone8,2 (iPhone 6s+), Board 1 (BoardConfig: n66ap, CPID: 0x8000)
 # With iOS version 15.7. Keys will be fetched online.
-./sshrd.py -d 0 -c 0x8000 -m n66ap -pt iPhone8,2 -i 15.7
+./create_ssh_ramdisk.py -d 0 -c 0x8000 -m n66ap -pt iPhone8,2 -i 15.7
 ```
 Ramdisks will be located in `final_ramdisk` once the program finishes. </br>
 **NOTE: iOS 16.x is not supported yet. I will not be able to help with any errors occuring when trying to create a ramdisk for this version.**
