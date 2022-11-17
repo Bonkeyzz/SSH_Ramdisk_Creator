@@ -287,7 +287,7 @@ if __name__ == '__main__':
         print("[*] This tool is not supported on Windows, it needs Linux or MacOS.")
         exit(1)
     os.system('clear')
-    parser = argparse.ArgumentParser(description='SSHRD Ramdisk creation tool.')
+    parser = argparse.ArgumentParser(description='SSH Ramdisk creation tool.')
     parser.add_argument('--decrypt_mode', '-d', type=int,
                         help="'0' is decryption using keys fetched online, '1' is decryption with Gaster",
                         required=True)
