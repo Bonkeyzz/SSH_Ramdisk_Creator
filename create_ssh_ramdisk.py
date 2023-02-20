@@ -258,7 +258,6 @@ def decrypt_boot_stages(ibss_path, ibec_path, build_id):
 def patch_files(ibss_decrypted_path, ibec_decrypted_path, kernelcache_path, devicetree_path, ramdisk_path,
                 trustcache_path):
     run_pcmd(f'../{sys_platform}/iBoot64Patcher {ibss_decrypted_path} iBSS.patched')
-    input()
     run_pcmd(
         f'../{sys_platform}/img4 -i iBSS.patched -o ../final_ramdisk/{args.ios}/{args.product_type}/{args.model}/ibss.img4 -M IM4M -A -T ibss')
     if args.boot_args:
