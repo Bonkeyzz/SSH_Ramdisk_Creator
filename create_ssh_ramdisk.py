@@ -14,6 +14,12 @@ import glob
 import shutil
 import pyimg4
 from pyimg4 import Keybag, Compression
+import re
+from bs4 import BeautifulSoup
+
+import requests
+from pyquery import PyQuery
+
 
 
 def run_cmd(cmd):
@@ -70,6 +76,7 @@ def decrypt_img(infile: str, magic: str, iv: str, key: str) -> int:
             im4p.payload.decompress()
 
     open(outfile, 'wb').write(im4p.payload.output().data)
+    print(f"[*] Success Decrypting '{infile}'")
     return 0
 
 
@@ -176,14 +183,45 @@ def download_required_files():
         return ibss_path, ibec_path, kernelcache_path, restoreramdisk_path, trustcache_path, devicetree_path, build_id
 
 
+def get_fw_keys_page(device: str, build: str) -> str:
+    """Return the URL of theiphonewiki to parse."""
+    wiki = "https://www.theiphonewiki.com"
+    data = {"search": build + " " + device}
+    response = requests.get(wiki + "/w/index.php", params=data)
+    html = response.text
+    link = re.search(r"\/wiki\/.*_" + build + r"_\(" + device + r"\)", html)
+    if link is not None:
+        pagelink = wiki + link.group()
+    else:
+        pagelink = None
+    return pagelink
+
+def getkeys(device: str, build: str):
+    pagelink = get_fw_keys_page(device, build)
+    print("Page Link: ", pagelink)
+    if pagelink is None:
+        return None
+
+    html = requests.get(pagelink).content
+
+    soup = BeautifulSoup(html, 'html.parser')
+    return_val = \
+        {
+            "ibss_iv": soup.find("code", id='keypage-ibss-iv').text,
+            "ibss_key": soup.find("code", id='keypage-ibss-key').text,
+            "ibec_iv": soup.find("code", id='keypage-ibec-iv').text,
+            "ibec_key": soup.find("code", id='keypage-ibec-key').text,
+        }
+    if soup.find("code", id='keypage-ibec2-iv') and soup.find("code", id='keypage-ibec2-key') is not None:
+        return_val['ibec2_iv'] = soup.find("code", id='keypage-ibec2-iv').text
+        return_val['ibec2_key'] = soup.find("code", id='keypage-ibec2-key').text
+    return return_val
+
 # Wrapper around decrypt_img
-def decrypt_img4p(infile, buildid):
+def decrypt_img4p(infile:str, buildid, iv, key):
+    to_decrypt = infile.split('.')[0].lower()
+
     print(f'[*] Decrypting: "{infile}"...')
-    ivkey = scrapkeys.getkeys(args.product_type, buildid, infile)
-    if ivkey is None:
-        print(f'[!] Internal error! Failed to get IvKey for BuildID: "{buildid}". Aborting...')
-        exit(1)
-    iv, key = utils.split_key(ivkey)
     magic = get_image_type(infile)
     print(f'[*] IV: "{iv}"')
     print(f'[*] Key: "{key}"')
@@ -203,13 +241,14 @@ def decrypt_boot_stages(ibss_path, ibec_path, build_id):
         run_pcmd(f'../{sys_platform}/gaster decrypt {ibss_path} {ibss_decrypted_path}')
         run_pcmd(f'../{sys_platform}/gaster decrypt {ibec_path} {ibec_decrypted_path}')
     else:
+        keys = getkeys(args.product_type, build_id)
         print(f'[*] Build ID: {build_id}')
         print(f'[*] Product Type: {args.product_type}')
         print("[*] Reached iBSS & iBEC decryption stage!")
-        if not decrypt_img4p(ibss_path, build_id):
+        if not decrypt_img4p(ibss_path, build_id, keys['ibss_iv'].replace('"', ''), keys['ibss_key'].replace('"', '')):
             print('[!] Failed to decrypt iBSS! Aborting...')
             exit(1)
-        if not decrypt_img4p(ibec_path, build_id):
+        if not decrypt_img4p(ibec_path, build_id, keys['ibec_iv'].replace('"', ''), keys['ibec_key'].replace('"', '')):
             print('[!] Failed to decrypt iBEC! Aborting...')
             exit(1)
 
@@ -219,6 +258,7 @@ def decrypt_boot_stages(ibss_path, ibec_path, build_id):
 def patch_files(ibss_decrypted_path, ibec_decrypted_path, kernelcache_path, devicetree_path, ramdisk_path,
                 trustcache_path):
     run_pcmd(f'../{sys_platform}/iBoot64Patcher {ibss_decrypted_path} iBSS.patched')
+    input()
     run_pcmd(
         f'../{sys_platform}/img4 -i iBSS.patched -o ../final_ramdisk/{args.ios}/{args.product_type}/{args.model}/ibss.img4 -M IM4M -A -T ibss')
     if args.boot_args:
@@ -321,9 +361,9 @@ if __name__ == '__main__':
             print('[*] Exiting...')
             exit(0)
         shutil.rmtree(f'final_ramdisk/{args.ios}/{args.product_type}/{args.model}')
-    files = glob.glob('temp_ramdisk/*')
-    for file in files:
-        os.remove(file)
+    # files = glob.glob('temp_ramdisk/*')
+    # for file in files:
+    #     os.remove(file)
 
     pathlib.Path(f'final_ramdisk/{args.ios}/{args.product_type}/{args.model}').mkdir(exist_ok=True, parents=True)
 
@@ -332,11 +372,10 @@ if __name__ == '__main__':
 
     ibss_path, ibec_path, kernelcache_path, restoreramdisk_path, trustcache_path, devicetree_path, build_id = download_required_files()
     ibss_decrypted_path, ibec_decrypted_path = decrypt_boot_stages(ibss_path, ibec_path, build_id)
-    patch_files(ibss_decrypted_path, ibec_decrypted_path, kernelcache_path, devicetree_path, restoreramdisk_path,
-                trustcache_path)
+    patch_files(ibss_decrypted_path, ibec_decrypted_path, kernelcache_path, devicetree_path, restoreramdisk_path, trustcache_path)
 
     os.chdir('../')
-    clean_up()
+    # clean_up()
     print(f"[*] Ramdisk files saved to: {main_root_dir}/final_ramdisk/{args.ios}/{args.product_type}/{args.model}")
     print("[*] Done!")
     print("Python version was made by Bonkeyzz.")
