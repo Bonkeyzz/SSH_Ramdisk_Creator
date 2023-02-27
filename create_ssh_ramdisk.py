@@ -232,19 +232,19 @@ def decrypt_img4p(infile:str, buildid, iv, key):
 
 def decrypt_boot_stages(ibss_path, ibec_path, build_id):
     print(f"Decryption mode: {'Gaster' if args.decrypt_mode == 1 else 'Online key fetch'}")
-    ibec_decrypted_path = ibec_path.replace(".im4p", ".bin")
-    ibss_decrypted_path = ibss_path.replace(".im4p", ".bin")
 
     if args.decrypt_mode == 1:
         run_pcmd(f'../{sys_platform}/gaster pwn')
         run_pcmd(f'../{sys_platform}/gaster reset')
-        run_pcmd(f'../{sys_platform}/gaster decrypt {ibss_path} {ibss_decrypted_path}')
-        run_pcmd(f'../{sys_platform}/gaster decrypt {ibec_path} {ibec_decrypted_path}')
+        run_pcmd(f'../{sys_platform}/gaster decrypt {ibss_path} iBSS.dec')
+        run_pcmd(f'../{sys_platform}/gaster decrypt {ibec_path} iBEC.dec')
     else:
         keys = getkeys(args.product_type, build_id)
         print(f'[*] Build ID: {build_id}')
         print(f'[*] Product Type: {args.product_type}')
         print("[*] Reached iBSS & iBEC decryption stage!")
+        # run_pcmd(f'../{sys_platform}/img4 -i {ibss_path} -o iBSS.dec -k {keys["ibss_iv"]}{keys["ibss_key"]}')
+        run_pcmd(f'../{sys_platform}/img4 -i {ibec_path} -o iBEC.dec -k {keys["ibec_iv"]}{keys["ibec_key"]}')
         if not decrypt_img4p(ibss_path, build_id, keys['ibss_iv'].replace('"', ''), keys['ibss_key'].replace('"', '')):
             print('[!] Failed to decrypt iBSS! Aborting...')
             exit(1)
@@ -252,14 +252,11 @@ def decrypt_boot_stages(ibss_path, ibec_path, build_id):
             print('[!] Failed to decrypt iBEC! Aborting...')
             exit(1)
 
-    return ibss_decrypted_path, ibec_decrypted_path
 
-
-def patch_files(ibss_decrypted_path, ibec_decrypted_path, kernelcache_path, devicetree_path, ramdisk_path,
+def patch_files(kernelcache_path, devicetree_path, ramdisk_path,
                 trustcache_path):
-    run_pcmd(f'../{sys_platform}/iBoot64Patcher {ibss_decrypted_path} iBSS.patched')
-    run_pcmd(
-        f'../{sys_platform}/img4 -i iBSS.patched -o ../final_ramdisk/{args.ios}/{args.product_type}/{args.model}/ibss.img4 -M IM4M -A -T ibss')
+    run_pcmd(f'../{sys_platform}/iBoot64Patcher iBSS.dec iBSS.patched')
+    run_pcmd(f'../{sys_platform}/img4 -i iBSS.patched -o ../final_ramdisk/{args.ios}/{args.product_type}/{args.model}/ibss.img4 -M IM4M -A -T ibss')
     if args.boot_args:
         boot_args = args.boot_args
     else:
@@ -268,9 +265,8 @@ def patch_files(ibss_decrypted_path, ibec_decrypted_path, kernelcache_path, devi
         boot_args = boot_args[:-1]
         boot_args += ' -restore"'
     print(f"[*] Boot arguments: {boot_args}")
-    run_pcmd(f'../{sys_platform}/iBoot64Patcher {ibec_decrypted_path} iBEC.patched -b {boot_args} -n')
-    run_pcmd(
-        f'../{sys_platform}/img4 -i iBEC.patched -o ../final_ramdisk/{args.ios}/{args.product_type}/{args.model}/iBEC.img4 -M IM4M -A -T ibec')
+    run_pcmd(f'../{sys_platform}/iBoot64Patcher iBEC.dec iBEC.patched -b {boot_args} -n')
+    run_pcmd(f'../{sys_platform}/img4 -i iBEC.patched -o ../final_ramdisk/{args.ios}/{args.product_type}/{args.model}/iBEC.img4 -M IM4M -A -T ibec')
     run_pcmd(f'../{sys_platform}/img4 -i {kernelcache_path} -o kcache.raw')
     run_pcmd(f'../{sys_platform}/Kernel64Patcher kcache.raw kcache.patched -a')
     kernel_diff('kcache.raw', 'kcache.patched', 'kcache.bpatch')
@@ -341,7 +337,9 @@ if __name__ == '__main__':
     # People might mistakenly use commas in the iOS version.
     if args.ios is not None and ',' in args.ios:
         args.ios = args.ios.replace(',', '.')
-
+    if args.ios is not None and not float(args.ios) >= 15:
+        print("[!] iOS version can't be below 15. Exitting...")
+        exit(1)
     if not path.isfile(f'other/shsh/{args.cpid}.shsh'):
         print(f'[!] CPID ({args.cpid}) is not found or is not supported.')
         exit(1)
@@ -370,8 +368,8 @@ if __name__ == '__main__':
     run_pcmd(f"../{sys_platform}/img4tool -e -s ../other/shsh/{args.cpid}.shsh -m IM4M")
 
     ibss_path, ibec_path, kernelcache_path, restoreramdisk_path, trustcache_path, devicetree_path, build_id = download_required_files()
-    ibss_decrypted_path, ibec_decrypted_path = decrypt_boot_stages(ibss_path, ibec_path, build_id)
-    patch_files(ibss_decrypted_path, ibec_decrypted_path, kernelcache_path, devicetree_path, restoreramdisk_path, trustcache_path)
+    decrypt_boot_stages(ibss_path, ibec_path, build_id)
+    patch_files(kernelcache_path, devicetree_path, restoreramdisk_path, trustcache_path)
 
     os.chdir('../')
     # clean_up()
