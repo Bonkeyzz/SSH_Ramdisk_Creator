@@ -50,7 +50,7 @@ options:
 ./create_ssh_ramdisk.py -d 0 -c 0x8000 -m n66ap -pt iPhone8,2 -i 15.7
 ```
 Ramdisks will be located in `final_ramdisk` once the program finishes. </br>
-**NOTE: iOS 16.x is not supported yet. I will not be able to help with any errors occuring when trying to create a ramdisk for this version.**
+**NOTE: iOS 16.x is not supported yet and iOS versions below 15 are indefinitely unsupported. I will not be able to help with any errors occuring when trying to create a ramdisk for this version.**
 
 # Donate
 Feel free to donate if you wanna support my work!
